@@ -1,0 +1,7 @@
+{
+  "name": "TradeSmart AI",
+  "description": "Eksport va importni optimallashtiruvchi, import o'rnini bosish tahlili va intellektual B2B maslahatchi platformasi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

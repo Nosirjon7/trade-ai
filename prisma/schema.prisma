@@ -1,0 +1,213 @@
+// TradeSmart AI - Prisma Schema for Export & Import Optimization B2B Platform
+// Database target: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TADBIRKOR       // Entrepreneur / Domestic Producer
+  FERMER          // Agricultural Farmer & Exporter
+  LOGISTIKA_AGENTI // Freight Forwarder & Customs Broker
+  ADMIN           // System Administrator
+}
+
+enum ProductCategory {
+  AGRICULTURE      // Qishloq xo'jaligi (Mevalar, sabzavotlar, yong'oqlar)
+  TEXTILE          // To'qimachilik va tikuvchilik
+  FOOD_PROCESSING  // Oziq-ovqat sanoati va qayta ishlash
+  INDUSTRIAL       // Sanoat, metallurgiya va mashinasozlik
+  CHEMICALS        // Kimyo, plastmassa va o'g'itlar
+  CONSTRUCTION     // Qurilish mollari
+  PHARMACEUTICAL   // Farmatsevtika va tibbiyot
+  ELECTRONICS      // Texnika, elektronika, chiplar va gadjetlar
+}
+
+enum AlertSeverity {
+  NORMAL
+  MEDIUM
+  HIGH
+  CRITICAL_RED_ZONE // Qizil Hudud - import keskin oshgan, mahalliylashtirish zarur
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String
+  phone           String?
+  role            UserRole          @default(TADBIRKOR)
+  companyName     String
+  companyTaxId    String?           // STIR (INN)
+  region          String?           // Masalan: Toshkent, Farg'ona, Samarqand
+  focusArea       ProductCategory   @default(AGRICULTURE)
+  avatarUrl       String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  calculations    FinancialCalculation[]
+  chatSessions    ConsultationSession[]
+  savedProducts   SavedExportProduct[]
+
+  @@map("users")
+}
+
+model ExportProduct {
+  id                String            @id @default(cuid())
+  hsCode            String            // TIF TN kodi (e.g. "080810", "520811")
+  name              String            // Mahsulot nomi (uz)
+  nameEn            String?           // English name
+  nameRu            String?           // Russian name
+  category          ProductCategory
+  imageUrl          String
+  description       String
+  unit              String            @default("kg") // kg, tonna, dona, metr
+  avgDomesticPrice  Decimal           // O'rtacha ichki bozor xarid narxi ($)
+  avgExportPrice    Decimal           // O'rtacha tashqi bozor sotish narxi ($)
+  annualVolumeTons  Decimal           // O'tgan yilgi jami eksport hajmi (tonna)
+  growthRatePercent Decimal           // Yillik eksport o'sish sur'ati (%)
+  isSeasonal        Boolean           @default(false)
+  peakMonths        String[]          // Masalan: ["May", "Iyun", "Iyul", "Avgust"]
+  
+  // Imtiyozlar va sertifikatlar
+  gspPlusEligible   Boolean           @default(false) // Yevropa Ittifoqi GSP+ 0% boj
+  cisFtaEligible    Boolean           @default(true)  // MDH erkin savdo rejimi
+  requiredCerts     String[]          // ["ST-1", "Fitosanitariya", "GlobalG.A.P.", "Halal"]
+  
+  // Aloqalar
+  targetMarkets     MarketTarget[]
+  savedByUsers      SavedExportProduct[]
+  calculations      FinancialCalculation[]
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([hsCode])
+  @@index([category])
+  @@map("export_products")
+}
+
+model MarketTarget {
+  id                String            @id @default(cuid())
+  exportProductId   String
+  exportProduct     ExportProduct     @relation(fields: [exportProductId], references: [id], onDelete: Cascade)
+  countryName       String            // e.g. "Rossiya", "Germaniya", "Xitoy", "BAA", "Turkiya"
+  countryCode       String            // "RU", "DE", "CN", "AE", "TR"
+  importTariffDuty  Decimal           @default(0) // Bojxona stavkasi (%)
+  marketDemandLevel String            @default("Yuqori") // Yuqori, O'rtacha, Barqaror
+  avgPriceInCountry Decimal           // Shu davlatdagi kutilayotgan ulgurji narx ($)
+  logisticsDays     Int               // O'rtacha yetkazish muddati (kun)
+  optimalTransport  String            // "Refrijerator avto", "Temir yo'l", "Avia kargo"
+
+  @@map("market_targets")
+}
+
+model ImportProduct {
+  id                    String          @id @default(cuid())
+  hsCode                String          // TIF TN kodi
+  name                  String          // Mahsulot nomi
+  category              ProductCategory
+  imageUrl              String
+  importVolumeUsd       Decimal         // Yillik import qiymati ($)
+  importVolumeTons      Decimal         // Yillik import hajmi
+  changePercentYear     Decimal         // O'tgan yilga nisbatan o'zgarish foizi (+48%)
+  alertStatus           AlertSeverity   @default(NORMAL) // Qizil Hudud signali
+  originCountries       String[]        // Asosiy keltirilayotgan davlatlar: ["Xitoy", "Rossiya", "Eron"]
+  reasonForImport       String          // Sabab: texnologiya yetishmasligi, sifat standarti, xom-ashyo
+  
+  // Import o'rnini bosish salohiyati (Substitution Potential)
+  localSubstitutable    Boolean         @default(true)
+  localRawMaterialScore Int             // Xom-ashyo yetarliligi (0-100%)
+  estimatedSetupCapEx   Decimal         // Ishlab chiqarishni yo'lga qo'yish taxminiy qiymati ($)
+  estPaybackMonths      Int             // Qoplanish muddati (oy)
+  stateIncentives       String[]        // ["5 yilga foyda solig'i 50%", "Uskunalar bojxona bojisiz"]
+
+  substitutionPlans     DomesticSubstitutionPlan[]
+  
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([hsCode])
+  @@index([alertStatus])
+  @@map("import_products")
+}
+
+model DomesticSubstitutionPlan {
+  id                    String        @id @default(cuid())
+  importProductId       String
+  importProduct         ImportProduct @relation(fields: [importProductId], references: [id], onDelete: Cascade)
+  title                 String        // Biznes-reja sarlavhasi
+  requiredMachinery     String[]      // Talab qilinadigan uskunalar
+  localRawMaterials     String[]      // Mahalliy xom-ashyolar
+  estimatedInvestment   Decimal       // Taxminiy investitsiya ($)
+  estimatedAnnualProfit Decimal       // Yillik sof foyda prognozi ($)
+  targetMarketDomestic  Decimal       // Ichki bozor ulushi (%)
+  exportPotentialLater  Boolean       @default(true)
+  summaryMarkdown       String        // AI tomonidan generatsiya qilingan to'liq reja
+  createdAt             DateTime      @default(now())
+
+  @@map("domestic_substitution_plans")
+}
+
+model FinancialCalculation {
+  id                String         @id @default(cuid())
+  userId            String?
+  user              User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  exportProductId   String?
+  exportProduct     ExportProduct? @relation(fields: [exportProductId], references: [id], onDelete: SetNull)
+  productName       String
+  volumeTons        Decimal
+  purchasePricePerKg Decimal
+  sellingPricePerKg Decimal
+  destinationCountry String
+  transportCost     Decimal
+  packagingCost     Decimal
+  customsDutyCost   Decimal
+  lossRiskCost      Decimal
+  netProfitUsd      Decimal
+  roiPercentage     Decimal
+  createdAt         DateTime       @default(now())
+
+  @@map("financial_calculations")
+}
+
+model ConsultationSession {
+  id          String         @id @default(cuid())
+  userId      String?
+  user        User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String         @default("Eksport-Import Konsultatsiyasi")
+  mode        String         @default("general") // "seasonal", "certs", "calculator", "substitution"
+  messages    ChatMessage[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("consultation_sessions")
+}
+
+model ChatMessage {
+  id          String              @id @default(cuid())
+  sessionId   String
+  session     ConsultationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender      String              // "user" | "assistant"
+  text        String
+  metadata    Json?               // Structured calculations, action links, HS codes
+  createdAt   DateTime            @default(now())
+
+  @@map("chat_messages")
+}
+
+model SavedExportProduct {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exportProductId String
+  exportProduct   ExportProduct @relation(fields: [exportProductId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+
+  @@unique([userId, exportProductId])
+  @@map("saved_export_products")
+}

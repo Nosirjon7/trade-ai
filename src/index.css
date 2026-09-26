@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+@keyframes currencyFloat {
+  0% { transform: translateY(0px) rotate(0deg); opacity: 0.18; }
+  50% { transform: translateY(-10px) rotate(6deg); opacity: 0.38; }
+  100% { transform: translateY(0px) rotate(0deg); opacity: 0.18; }
+}
+
+@keyframes currencyFlowLine {
+  0% { stroke-dashoffset: 300; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes scanbeam {
+  0% { transform: translateY(-120%); opacity: 0; }
+  25% { opacity: 0.45; }
+  75% { opacity: 0.45; }
+  100% { transform: translateY(280%); opacity: 0; }
+}
+
+@keyframes lightBeamFlare {
+  0% { transform: translateX(-150%) skewX(-25deg); opacity: 0; }
+  40% { opacity: 0.9; }
+  60% { opacity: 0.9; }
+  100% { transform: translateX(250%) skewX(-25deg); opacity: 0; }
+}
+
+@keyframes shockwaveRing {
+  0% { transform: scale(0.6); opacity: 1; border-width: 3px; }
+  100% { transform: scale(2.8); opacity: 0; border-width: 1px; }
+}
+
+@keyframes coinBurst {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1.3) rotate(var(--rot)); opacity: 0; }
+}
+
+/* 8-10 Second Cinematic Video Motion (Ken Burns breathing video effect) */
+@keyframes cinematicVideoMotion {
+  0% {
+    transform: scale(1.02) translate(0%, 0%);
+    filter: brightness(1) saturate(1.03);
+  }
+  25% {
+    transform: scale(1.09) translate(-1.8%, -1.2%);
+    filter: brightness(1.05) saturate(1.08);
+  }
+  50% {
+    transform: scale(1.15) translate(1.4%, -1.6%);
+    filter: brightness(1.07) saturate(1.12);
+  }
+  75% {
+    transform: scale(1.08) translate(1.2%, 1%);
+    filter: brightness(1.04) saturate(1.06);
+  }
+  100% {
+    transform: scale(1.02) translate(0%, 0%);
+    filter: brightness(1) saturate(1.03);
+  }
+}
+
+/* 8-10 Second Cinematic Video Lighting Flare & Shimmer */
+@keyframes videoLightSweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.35;
+  }
+  28% {
+    transform: translateX(250%) skewX(-20deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+/* Video REC indicator pulse */
+@keyframes videoRecPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+}
+
+/* Textile Loom Shuttle Motion */
+@keyframes loomShuttle {
+  0% { transform: translateX(-110%); opacity: 0; }
+  10% { opacity: 1; }
+  45% { transform: translateX(110%); opacity: 1; }
+  50% { opacity: 0; }
+  55% { transform: translateX(110%); opacity: 0; }
+  60% { opacity: 1; }
+  95% { transform: translateX(-110%); opacity: 1; }
+  100% { transform: translateX(-110%); opacity: 0; }
+}
+
+/* Water drop & Hydrocooling Mist for Fruit & Agriculture */
+@keyframes dewDropFall {
+  0% { transform: translateY(-8px) scale(0.7); opacity: 0; }
+  25% { opacity: 0.95; }
+  75% { transform: translateY(50px) scale(1.1); opacity: 0.9; }
+  100% { transform: translateY(65px) scale(1.4); opacity: 0; }
+}
+
+@keyframes mistFlow {
+  0% { transform: translateX(-15%) scaleY(0.9); opacity: 0.25; }
+  50% { transform: translateX(15%) scaleY(1.1); opacity: 0.55; }
+  100% { transform: translateX(-15%) scaleY(0.9); opacity: 0.25; }
+}
+
+/* Metallurgy & Molten Copper Sparks */
+@keyframes sparkRise {
+  0% { transform: translateY(0px) scale(0.6); opacity: 1; }
+  40% { opacity: 1; }
+  100% { transform: translateY(-60px) translateX(var(--sx, 12px)) scale(0.2); opacity: 0; }
+}
+
+/* Video Timer Bar 9.5s loop */
+@keyframes videoProgressBar {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+/* Factory / Field Audio Visualizer bars */
+@keyframes eqBarPulse {
+  0%, 100% { height: 3px; }
+  50% { height: 13px; }
+}
+
+/* Section Entry Camera Shutter / Light Sweep */
+@keyframes sectionEntryShutter {
+  0% { opacity: 0; filter: brightness(1.6) blur(2px); transform: scale(0.99); }
+  40% { opacity: 1; filter: brightness(1.15) blur(0px); }
+  100% { opacity: 1; filter: brightness(1); transform: scale(1); }
+}
